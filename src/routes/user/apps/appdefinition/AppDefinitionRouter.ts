@@ -120,6 +120,44 @@ router.post('/enablebasedomainssl/', function (req, res, next) {
         .catch(ApiStatusCodes.createCatcher(res))
 })
 
+router.post('/addtag/', function (req, res, next) {
+    const serviceManager = InjectionExtractor.extractUserFromInjected(res).user
+        .serviceManager
+
+    const appName = req.body.appName
+    const tagName = req.body.tagName
+
+    return Promise.resolve()
+        .then(function () {
+            return serviceManager.addAppTag(appName, tagName)
+        })
+        .then(function () {
+            let msg = `Tag : ${tagName} was added for ${appName}`
+            Logger.d(msg)
+            res.send(new BaseApi(ApiStatusCodes.STATUS_OK, msg))
+        })
+        .catch(ApiStatusCodes.createCatcher(res))
+})
+
+router.post('/removetag/', function (req, res, next) {
+    const serviceManager = InjectionExtractor.extractUserFromInjected(res).user
+        .serviceManager
+
+    const appName = req.body.appName
+    const tagName = req.body.tagName
+
+    return Promise.resolve()
+        .then(function () {
+            return serviceManager.removeAppTag(appName, tagName)
+        })
+        .then(function () {
+            let msg = `Tag : ${tagName} was removed for ${appName}`
+            Logger.d(msg)
+            res.send(new BaseApi(ApiStatusCodes.STATUS_OK, msg))
+        })
+        .catch(ApiStatusCodes.createCatcher(res))
+})
+
 router.post('/customdomain/', function (req, res, next) {
     const serviceManager = InjectionExtractor.extractUserFromInjected(res).user
         .serviceManager
@@ -320,6 +358,7 @@ router.post('/update/', function (req, res, next) {
     let repoInfo = !!req.body.appPushWebhook
         ? req.body.appPushWebhook.repoInfo || {}
         : {}
+    let tags = req.body.tags || []
     let envVars = req.body.envVars || []
     let volumes = req.body.volumes || []
     let ports = req.body.ports || []
@@ -381,7 +420,8 @@ router.post('/update/', function (req, res, next) {
             customNginxConfig,
             preDeployFunction,
             serviceUpdateOverride,
-            websocketSupport
+            websocketSupport,
+            tags
         )
         .then(function () {
             Logger.d(`AppName is updated: ${appName}`)

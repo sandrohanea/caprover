@@ -4,6 +4,9 @@ interface IAppEnvVar {
     key: string
     value: string
 }
+interface IAppTag {
+    tagName: string
+}
 
 interface IAppVolume {
     containerPath: string
@@ -70,6 +73,8 @@ interface IAppDefinitionBase {
     envVars: IAppEnvVar[]
 
     versions: IAppVersion[]
+
+    tags: IAppTag[]
 }
 
 interface IHttpAuth {

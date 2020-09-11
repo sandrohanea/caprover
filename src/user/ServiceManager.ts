@@ -358,6 +358,26 @@ class ServiceManager {
             })
     }
 
+    addAppTag(appName: string, tagName: string) {
+        const self = this
+
+        return Promise.resolve().then(function () {
+            return self.dataStore
+                .getAppsDataStore()
+                .addTagForApp(appName, tagName)
+        })
+    }
+
+    removeAppTag(appName: string, tagName: string) {
+        const self = this
+
+        return Promise.resolve().then(function () {
+            return self.dataStore
+                .getAppsDataStore()
+                .removeTagForApp(appName, tagName)
+        })
+    }
+
     verifyCaptainOwnsGenericSubDomain(appName: string) {
         const self = this
 
@@ -651,7 +671,8 @@ class ServiceManager {
         customNginxConfig: string,
         preDeployFunction: string,
         serviceUpdateOverride: string,
-        websocketSupport: boolean
+        websocketSupport: boolean,
+        tags: IAppTag[]
     ) {
         const self = this
         const dataStore = this.dataStore
@@ -770,7 +791,8 @@ class ServiceManager {
                         customNginxConfig,
                         preDeployFunction,
                         serviceUpdateOverride,
-                        websocketSupport
+                        websocketSupport,
+                        tags
                     )
             })
             .then(function () {

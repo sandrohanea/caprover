@@ -83,6 +83,18 @@ class AppsDataStore {
                     }
                 }
 
+                if (app.tags) {
+                    for (let i = 0; i < app.tags.length; i++) {
+                        const element = app.tags[i]
+                        if (!element.tagName) {
+                            throw ApiStatusCodes.createError(
+                                ApiStatusCodes.STATUS_ERROR_GENERIC,
+                                'Tag Name cannot be empty!'
+                            )
+                        }
+                    }
+                }
+
                 if (app.ports) {
                     for (let i = 0; i < app.ports.length; i++) {
                         const obj = app.ports[i]
@@ -465,6 +477,50 @@ class AppsDataStore {
                 return self.saveApp(appName, app)
             })
     }
+    addTagForApp(appName: string, tagName: string) {
+        const self = this
+
+        return self.getAppDefinition(appName).then(function (app) {
+            app.tags = app.tags || []
+            if (app.tags.some((tag) => tag.tagName === tagName)) {
+                throw ApiStatusCodes.createError(
+                    ApiStatusCodes.ILLEGAL_PARAMETER,
+                    `Tag ${tagName} is already attached to app ${appName}`
+                )
+            }
+
+            app.tags.push({ tagName: tagName })
+            return self.saveApp(appName, app)
+        })
+    }
+
+    removeTagForApp(appName: string, tagName: string) {
+        const self = this
+
+        return this.getAppDefinition(appName).then(function (app) {
+            app.tags = app.tags || []
+
+            const newTags = []
+            let removed = false
+            for (let idx = 0; idx < app.tags.length; idx++) {
+                if (app.tags[idx].tagName === tagName) {
+                    removed = true
+                } else {
+                    newTags.push(app.tags[idx])
+                }
+            }
+
+            if (!removed) {
+                throw ApiStatusCodes.createError(
+                    ApiStatusCodes.STATUS_ERROR_GENERIC,
+                    `Tag ${tagName} does not exist in ${appName}`
+                )
+            }
+
+            app.tags = newTags
+            return self.saveApp(appName, app)
+        })
+    }
 
     verifyCustomDomainBelongsToApp(appName: string, customDomain: string) {
         const self = this
@@ -617,7 +673,8 @@ class AppsDataStore {
         customNginxConfig: string,
         preDeployFunction: string,
         serviceUpdateOverride: string,
-        websocketSupport: boolean
+        websocketSupport: boolean,
+        tags: IAppTag[]
     ) {
         const self = this
         let appObj: IAppDef
@@ -747,6 +804,23 @@ class AppsDataStore {
                     }
                 }
 
+                if (tags) {
+                    appObj.tags = []
+                    for (let i = 0; i < tags.length; i++) {
+                        const obj = tags[i]
+                        obj.tagName = (obj.tagName || '').trim()
+
+                        if (!obj.tagName) {
+                            // Empty entry... Skipping...
+                            continue
+                        }
+
+                        appObj.tags.push({
+                            tagName: obj.tagName,
+                        })
+                    }
+                }
+
                 if (volumes) {
                     appObj.volumes = []
 
@@ -860,6 +934,7 @@ class AppsDataStore {
                 hasDefaultSubDomainSsl: false,
                 forceSsl: false,
                 websocketSupport: false,
+                tags: [],
             }
 
             resolve(defaultAppDefinition)
